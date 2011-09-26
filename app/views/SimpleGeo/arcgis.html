@@ -1,0 +1,211 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=7,IE=9" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <title>
+      Geocode Details
+    </title>
+    <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.5/js/dojo/dijit/themes/claro/claro.css">
+	<script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script type="text/javascript">djConfig = { parseOnLoad:true };</script>
+
+    <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.5">
+    </script>
+    <style>
+      html, body {
+        height: 100%;
+        width: 100%;
+        color:#353129;
+        overflow:hidden;
+      }
+      fieldset { 
+        border: 1px solid #353129;
+        color:#353129;
+      }
+      #map{
+        padding:0px;
+        border:solid 2px #687D77;
+        -moz-border-radius: 4px;
+        border-radius: 4px;
+      }
+      #footerPane{
+        border:none;
+        overflow:auto;
+        margin:5px 5px;
+        height:300px;
+      }
+
+    </style>
+    <script type="text/javascript" charset="utf-8">
+      dojo.require("esri.map");
+      dojo.require("dijit.layout.BorderContainer");
+      dojo.require("dijit.layout.ContentPane");
+      dojo.require("esri.tasks.locator");
+
+//      var getJSONLat = function(code) {
+//    	  jQuery.getJSON("/SimpleGeo/showWSJSON");
+//      };
+      var getJSONLat = function(lat,lon) {
+         var ludo = $.getJSON("/SimpleGeo/showWSJSON?",
+              {"lat" : lat,"lon" : lon},
+              function(jsonString) {
+                  var jsonString2 = ludo;
+                  alert("code : " + jsonString2);
+              }
+          );
+      };
+      
+      var locator, map;
+
+      function init() {
+        //var initExtent = new esri.geometry.Extent({"xmin":-16611275,"ymin":3810939,"xmax":-4831411,"ymax":7020071,"spatialReference":{"wkid":102100}});
+        var initExtent = new esri.geometry.Extent({"xmin":-68135.68856173154,"ymin":5592658.531957757,"xmax":-66420.63273972768,"ymax":5593101.627856061,"spatialReference":{"wkid":102100}});
+        getJSONLat(-68135.68856173154,5592658.531957757);
+        
+        map = new esri.Map("map",{
+          wrapAround180:true,
+          extent:initExtent
+        });
+
+        dojo.connect(map, 'onLoad', function(theMap) { 
+          //resize the map when the browser resizes
+          dojo.connect(dijit.byId('map'), 'resize', map,map.resize);
+        });
+        
+        
+        var basemap = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer");
+        map.addLayer(basemap);
+
+        //Create geocoder  
+        locator = new esri.tasks.Locator("http://tasks.arcgis.com/ArcGIS/rest/services/WorldLocator/GeocodeServer");
+
+
+        //Draw and zoom to the result when the geocoding is complete                
+        dojo.connect(locator, "onAddressToLocationsComplete", function(geocodeResults) {
+          map.graphics.clear();
+          dojo.forEach(geocodeResults, function(geocodeResult, index) {
+            //create a random color for the text and marker symbol
+            var r = Math.floor(Math.random() * 250);
+            var g = Math.floor(Math.random() * 100);
+            var b = Math.floor(Math.random() * 100);
+          
+            var symbol = new esri.symbol.SimpleMarkerSymbol(esri.symbol.SimpleMarkerSymbol.STYLE_CIRCLE, 20, new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([r, g, b, 0.5]), 10), new dojo.Color([r, g, b, 0.9]));
+            var pointMeters = esri.geometry.geographicToWebMercator(geocodeResult.location);
+            var locationGraphic = new esri.Graphic(pointMeters, symbol);
+           
+            var font = new esri.symbol.Font().setSize("12pt").setWeight(esri.symbol.Font.WEIGHT_BOLD);
+            var textSymbol = new esri.symbol.TextSymbol((index + 1) + ".) " + geocodeResult.address, font, new dojo.Color([r, g, b, 0.8])).setOffset(5, 15);
+            //add the location graphic and text with the address to the map 
+            map.graphics.add(locationGraphic);
+            map.graphics.add(new esri.Graphic(pointMeters, textSymbol));
+          });
+          var ptAttr = geocodeResults[0].attributes;
+          
+          var esriExtent = new esri.geometry.Extent(ptAttr.West_Lon, ptAttr.South_Lat, ptAttr.East_Lon, ptAttr.North_Lat, new esri.SpatialReference({
+            wkid: 4326
+          }));
+          map.setExtent(esri.geometry.geographicToWebMercator(esriExtent));
+
+          //showResults(geocodeResults);
+
+
+        });
+
+        dojo.connect(map, "onExtentChange", updateExtent);
+
+      }
+
+
+
+      function zoomTo(lat, lon) {
+        var point = new esri.geometry.Point(lon, lat, {
+          wkid: "4326"
+        });
+
+        var wmpoint = esri.geometry.geographicToWebMercator(point);
+        map.centerAt(wmpoint);
+      }
+
+
+
+      function updateExtent() {
+        dojo.byId("currentextent").innerHTML = "<b>Current Extent JSON:</b> " + dojo.toJson(map.extent.toJson());
+        dojo.byId("currentextent").innerHTML += "<br/><b>Current Zoom level:</b> " + map.getLevel();
+      }
+
+
+
+      function showResults(results) {
+        var rdiv = dojo.byId("resultsdiv");
+        rdiv.innerHTML = "<p><b>Results : " + results.length + "</b></p>";
+        
+        var content = [];
+        dojo.forEach(results, function(result, index) {             
+          content.push("<fieldset>");
+          content.push("<legend><b>" + (index + 1) + ". " + result.address + "</b></legend>");
+          content.push("<i>Score:</i> " + result.score + " (<i>Method:</i> " + result.attributes.MatchLevel + ")");
+          content.push("<br/>");
+          content.push("<i>Address Found In</i> : " + result.address);
+          content.push("<br/><br/>");
+          content.push("Latitude (y): " + result.location.y);
+          content.push("&nbsp;&nbsp;");
+          content.push("Longitude (x): " + result.location.x);
+          content.push("<br/><br/>");
+          content.push("<b>GeoRSS-Simple</b><br/>");
+          content.push("&lt;georss:point&gt;" + result.location.y + " " + result.location.x + "&lt;/georss:point&gt;");
+          content.push("<br/><br/>");
+          content.push("<b>GeoRSS-GML</b><br/>");
+          content.push("&lt;georss:where&gt;&lt;gml:Point&gt;&lt;gml:pos&gt;" + result.location.y + " " + result.location.x + "&lt;/gml:pos&gt;&lt;gml:Point&gt;&lt;/georss:where&gt;");
+          content.push("<br/><br/>");
+          content.push("<b>Esri JSON</b><br/>");
+          content.push("<b>WGS:</b> " + dojo.toJson(result.location.toJson()));
+          content.push("<br/>");
+          
+          var location_wm = esri.geometry.geographicToWebMercator(result.location);
+          
+          content.push("<b>WM:</b> " + dojo.toJson(location_wm.toJson()));
+          content.push("<br/><br/>");
+          content.push("<b>Geo JSON</b><br/>");
+          content.push('"geometry": {"type": "Point", "coordinates": [' + result.location.y + ',' + result.location.x + ']}');
+          content.push("<br/><br/>");
+          content.push("<input type='button' value='Center At Address' onclick='zoomTo(" + result.location.y + "," + result.location.x + ")'/>");
+          content.push("</fieldset>");
+        });
+        rdiv.innerHTML += content.join("");
+
+      }
+
+
+
+      //Perform the geocode. This function runs when the "Locate" button is pushed.            
+      function locate() {
+      var address = {
+           'SingleLine': dojo.byId("address").value
+        };
+        //optionally return the out fields if you need to calculate the extent of the geocoded point
+        locator.addressToLocations(address,["*"]);
+      }
+
+      dojo.addOnLoad(init);
+    </script>
+  </head>
+  
+  <body class="claro">
+    <div dojotype="dijit.layout.BorderContainer" gutters="false" design="sidebar" style="width:100%;height:100%;">
+      <div id="map" dojotype="dijit.layout.ContentPane" region="center"></div>
+
+      <div id="footerPane" dojotype="dijit.layout.ContentPane" region="bottom">
+        <div>Address :
+          <input type="text" id="address" size="60" value="1 rue edouard Vaillant 33600 Pessac"/>
+          <button onclick="locate();" dojoType="dijit.form.Button">Locate</button>
+        </div>
+        <div id="currentextent"></div>
+        <div id="resultsdiv"></div>
+      </div>
+    </div>
+
+  </body>
+
+</html>

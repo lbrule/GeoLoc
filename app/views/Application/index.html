@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset=utf-8>
+<meta name="viewport" content="width=620">
+<link rel="stylesheet" href="http://html5demos.com/css/html5demos.css">
+<script src="http://code.jquery.com/jquery-latest.js"></script>
+</head>
+<body>
+ <script>
+ var latitude;
+ var longitude;
+function success(position) {
+  var s = document.querySelector('#status');
+  
+/*   alert("Latitude : " + position.coords.latitude + ", longitude : " + position.coords.longitude);
+  alert("Latitude : " + latitude + ", longitude : " + longitude);
+ */
+ var temp = $.getJSON("http://127.0.0.1:9000/simpleGeo/showWSJSON?lat=" + position.coords.latitude + "&lon=" + position.coords.longitude, function(json) {
+		//alert("JSON Data: " + temp.responseText);
+		   document.write(temp.responseText);
+		 });
+		 
+
+ if (s.className == 'success') {
+    // not sure why we're hitting this twice in FF, I think it's to do with a cached result coming back    
+    return;
+  }
+}
+
+function error(msg) {
+  var s = document.querySelector('#status');
+  s.innerHTML = typeof msg == 'string' ? msg : "failed";
+  s.className = 'fail';
+}
+
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(success, error);
+} else {
+  error('not supported');
+}
+
+</script>
+<script type="text/javascript">
+
+</script>
+		
+</body>
+</html>
+<!-- http://maps.googleapis.com/maps/api/geocode/json?address=1+rue+Edouard+vaillant+33600+pessac,+Mountain+View,+CA&sensor=true -->

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<testsuite failures="0" time="1.953" errors="0" skipped="0" tests="2" name="SimpleGeoTest">
+  <testcase classname="SimpleGeoTest" name="testSimpleGeoJSON" time="0.953">
+      </testcase>
+  <testcase classname="SimpleGeoTest" name="testSimpleGeoWSJSON" time="1">
+      </testcase>
+</testsuite>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<testsuite failures="0" time="2.031" errors="0" skipped="0" tests="1" name="geoloc.SimpleGeoContextClientTest">
+  <testcase classname="geoloc.SimpleGeoContextClientTest" name="test" time="2.031">
+      </testcase>
+</testsuite>
