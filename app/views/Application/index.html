@@ -6,21 +6,21 @@
 <link rel="stylesheet" href="http://html5demos.com/css/html5demos.css">
 <script src="http://code.jquery.com/jquery-latest.js"></script>
 </head>
-<body>
- <script>
+<body id="status">
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+<script>
  var latitude;
  var longitude;
 function success(position) {
   var s = document.querySelector('#status');
   
-/*   alert("Latitude : " + position.coords.latitude + ", longitude : " + position.coords.longitude);
-  alert("Latitude : " + latitude + ", longitude : " + longitude);
- */
- var temp = $.getJSON("http://127.0.0.1:9000/simpleGeo/showWSJSON?lat=" + position.coords.latitude + "&lon=" + position.coords.longitude, function(json) {
-		//alert("JSON Data: " + temp.responseText);
-		   document.write(temp.responseText);
-		 });
+ var temp = $.getJSON("http://127.0.0.1:9000/simpleGeo/showWSJSON?lat=" + position.coords.latitude + "&lon=" + position.coords.longitude, 
+		 function(json) {
+		s.innerHTML = temp.responseText;
+ });
+ 		
 		 
+	//alert(temp);
 
  if (s.className == 'success') {
     // not sure why we're hitting this twice in FF, I think it's to do with a cached result coming back    
@@ -41,10 +41,6 @@ if (navigator.geolocation) {
 }
 
 </script>
-<script type="text/javascript">
-
-</script>
-		
 </body>
 </html>
 <!-- http://maps.googleapis.com/maps/api/geocode/json?address=1+rue+Edouard+vaillant+33600+pessac,+Mountain+View,+CA&sensor=true -->
