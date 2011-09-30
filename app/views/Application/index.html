@@ -15,8 +15,15 @@ function success(position) {
   var s = document.querySelector('#status');
   
  var temp = $.getJSON("http://127.0.0.1:9000/simpleGeo/showWSJSON?lat=" + position.coords.latitude + "&lon=" + position.coords.longitude, 
-		 function(json) {
+	function(json) {
+	 //alert (temp);
+	 if (temp.statusText == 'OK') {
 		s.innerHTML = temp.responseText;
+	 	s.className = 'success';
+	 }
+	 else {
+		 error("Localisation Failed"); 
+	 }
  });
  		
 		 
