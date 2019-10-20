@@ -1,7 +1,8 @@
   node {        
         stage("IC - Checkout") {
             checkout scm
-            mvn clean install -DskipTests=true
-          
+        }
+        stage("IC - Clean Install") {
+            mvn clean install
         }
   }
