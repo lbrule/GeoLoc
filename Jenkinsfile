@@ -1,1 +1,5 @@
-checkout scm
+  node {        
+        stage("IC - Checkout") {
+            checkout scm
+        }
+  }
